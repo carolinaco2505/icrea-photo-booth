@@ -237,20 +237,28 @@ if (safeContact && isEmail(safeContact)) {
     whatsappUrl = `https://wa.me/57${phone}?text=${encodeURIComponent(text)}`;
   }
 }
-    }
 
-    return NextResponse.json({
-      ok: true,
-      photoUrl: finalImage,
-      cloudinaryPublicId: finalPublicId,
-      emailSent,
-      whatsappUrl,
-    });
-  } catch (error: any) {
-    console.error("Finalize route error:", error);
-    return NextResponse.json(
-      { ok: false, error: error?.message || "Error interno del servidor" },
-      { status: 500 }
-    );
-  }
+//return NextResponse.json({
+  //ok: true,
+  //photoUrl: finalImage,
+  //cloudinaryPublicId: finalPublicId,
+  //emailSent,
+  //whatsappUrl,
+//});
+
+
+return NextResponse.json({ 
+  ok: true, 
+  photoUrl: finalImage, 
+  cloudinaryPublicId: finalPublicId, 
+  emailSent, whatsappUrl, 
+});
+
+} catch (error: any) { 
+  console.error("Finalize route error:", error); 
+  return NextResponse.json( 
+    { ok: false, error: error?.message || "Error interno del servidor" }, 
+    { status: 500 } 
+  ); 
+} 
 }
