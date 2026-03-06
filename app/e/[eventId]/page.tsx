@@ -42,11 +42,16 @@ export default function EventPage() {
       });
 
       const json = await res.json();
+      console.log("REGISTER RESPONSE FRONT", json);
       if (!res.ok) {
         throw new Error(json?.error || "No pude registrar la sesión");
       }
 
+      
       const rid = json.rid as string;
+
+      console.log("RID FRONT", rid);
+      
 
       router.push(
         `/e/${encodeURIComponent(eventId)}/format?rid=${encodeURIComponent(rid)}`
