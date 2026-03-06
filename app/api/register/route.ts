@@ -26,23 +26,24 @@ export async function POST(req: Request) {
     }
 
     const { data, error } = await supabaseServer
-      .from("photo_sessions")
-      .insert({
-        event_id: eventId,
-        full_name: fullName,
-        company,
-        contact,
-        consent: true,
-      })
-      .select("id")
-      .single();
+  .from("photo_sessions")
+  .insert({
+    event_id: eventId,
+    full_name: fullName,
+    company,
+    contact,
+    consent: true,
+    format: "horizontal",
+  })
+  .select("id")
+  .single();
 
     if (error) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
 
     console.log("REGISTER API RESPONSE", { ok: true, rid: data.id });
-    
+
     return NextResponse.json({ ok: true, rid: data.id }, { status: 200 });
   } catch (e: any) {
     return NextResponse.json(
