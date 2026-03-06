@@ -48,7 +48,11 @@ export default function EventPage() {
       }
 
       
-      const rid = json.rid as string;
+      const rid = String(json?.rid || "").trim();
+
+if (!rid) {
+  throw new Error("El servidor no devolvió RID");
+}
 
       console.log("RID FRONT", rid);
       
