@@ -61,8 +61,8 @@ if (!rid) {
   const format = (searchParams.get("format") || "horizontal") as Format;
 
   const OUT = useMemo(() => {
-    if (format === "vertical") return { w: 1350, h: 2400 };
-    return { w: 2400, h: 1350 };
+    if (format === "vertical") return { w: 1080, h: 1920 };
+return { w: 1920, h: 1080 };
   }, [format]);
 
   const overlayPath = useMemo(() => {
@@ -79,6 +79,7 @@ if (!rid) {
   const [error, setError] = useState("");
   const [shotDataUrl, setShotDataUrl] = useState("");
   const [saving, setSaving] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("user");
 
   useEffect(() => {
     let cancelled = false;
@@ -90,7 +91,7 @@ if (!rid) {
 
         const constraints: MediaStreamConstraints = {
           video: {
-            facingMode: "user",
+            facingMode: cameraFacing,
             width: { ideal: 1920 },
             height: { ideal: 1080 },
           },
@@ -125,7 +126,7 @@ if (!rid) {
         streamRef.current = null;
       }
     };
-  }, []);
+  }, [cameraFacing]);
 
   useEffect(() => {
     const canvas = previewCanvasRef.current;
@@ -191,7 +192,7 @@ if (!rid) {
 
       ctx.drawImage(overlayImg, 0, 0, OUT.w, OUT.h);
 
-      const finalDataUrl = finalCanvas.toDataURL("image/png");
+      const finalDataUrl = finalCanvas.toDataURL("image/jpeg", 0.82);
       setShotDataUrl(finalDataUrl);
     } catch (e: any) {
       setError(e?.message || "No pude tomar la foto.");
@@ -338,6 +339,16 @@ console.log("SESSION DEBUG", session);
                 Repetir
               </button>
             )}
+
+<button
+  onClick={() =>
+    setCameraFacing((prev) => (prev === "user" ? "environment" : "user"))
+  }
+  disabled={saving}
+  className="px-4 py-2 rounded border border-white/30 hover:border-white/60 disabled:opacity-40"
+>
+  {cameraFacing === "user" ? "Usar cámara trasera" : "Usar cámara frontal"}
+</button>
 
             <button
               onClick={onChangeFormat}
