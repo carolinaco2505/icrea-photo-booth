@@ -44,7 +44,20 @@ export default function CapturePage() {
     return Array.isArray(v) ? v[0] : v || "";
   }, [params]);
 
-  const rid = searchParams.get("rid") || "";
+  const rid = searchParams.get("rid");
+
+if (!rid) {
+  return (
+    <div className="p-10 text-center">
+      <h2 className="text-xl font-bold">Registro inválido</h2>
+      <p>No se encontró un identificador de sesión.</p>
+      <a href={`/e/${eventId}`} className="underline">
+        Volver a registrarse
+      </a>
+    </div>
+  );
+}
+
   const format = (searchParams.get("format") || "horizontal") as Format;
 
   const OUT = useMemo(() => {
@@ -227,6 +240,8 @@ export default function CapturePage() {
     const participantName = session?.full_name || null;
 const contact = session?.contact || null;
 const company = session?.company || null;
+
+console.log("SESSION DEBUG", session);
 
     const res = await fetch("/api/photo/finalize", {
       method: "POST",
