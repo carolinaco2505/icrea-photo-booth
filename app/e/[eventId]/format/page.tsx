@@ -12,10 +12,18 @@ export default function FormatPage() {
   function go(format: "vertical" | "horizontal") {
     if (!rid) return;
 
+    if (!rid) {
+  alert("Error: no se encontró el registro. Por favor vuelve a iniciar.");
+  router.push(`/e/${eventId}`);
+  return;
+}
+
     router.push(
-      `/e/${encodeURIComponent(eventId)}/capture?rid=${encodeURIComponent(rid)}&format=${format}`
-    );
+  `/e/${encodeURIComponent(eventId)}/capture?rid=${encodeURIComponent(rid || "")}&format=${format}`
+);
   }
+
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
