@@ -164,60 +164,79 @@ console.log("CLOUDINARY FOLDER DEBUG", {
     let emailSent = false;
     let whatsappUrl: string | null = null;
 
-    if (safeContact && isEmail(safeContact)) {
-      const resendApiKey = process.env.RESEND_API_KEY;
-      const resendFrom = process.env.RESEND_FROM;
+if (safeContact && isEmail(safeContact)) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const resendFrom = process.env.RESEND_FROM;
 
-      if (resendApiKey && resendFrom) {
-        const resend = new Resend(resendApiKey);
+  console.log("EMAIL CHECK", {
+    safeContact,
+    isEmail: isEmail(safeContact),
+    hasResendApiKey: !!resendApiKey,
+    resendFrom,
+  });
 
-        const html = `
-          <div style="font-family: Arial, sans-serif; line-height:1.5;">
-            <h2>Tu foto está lista</h2>
-            <p>Hola${participant_name ? ` ${participant_name}` : ""},</p>
-            <p>Te compartimos tu foto del evento.</p>
-            <p>
-              <a href="${finalImage}" target="_blank" style="
-                display:inline-block;
-                padding:12px 18px;
-                background:#111827;
-                color:#ffffff;
-                text-decoration:none;
-                border-radius:8px;
-              ">
-                Ver / descargar foto
-              </a>
-            </p>
-            <p>O abre este enlace directamente:</p>
-            <p><a href="${finalImage}" target="_blank">${finalImage}</a></p>
-          </div>
-        `;
+  if (resendApiKey && resendFrom) {
+    const resend = new Resend(resendApiKey);
 
-        try {
-          await resend.emails.send({
-            from: resendFrom,
-            to: safeContact,
-            subject: "Tu foto del evento está lista",
-            html,
-          });
+    const html = `
+      <div style="font-family: Arial, sans-serif; line-height:1.5;">
+        <h2>Tu foto está lista</h2>
+        <p>Hola${participant_name ? ` ${participant_name}` : ""},</p>
+        <p>Te compartimos tu foto del evento.</p>
+        <p>
+          <a href="${finalImage}" target="_blank" style="
+            display:inline-block;
+            padding:12px 18px;
+            background:#111827;
+            color:#ffffff;
+            text-decoration:none;
+            border-radius:8px;
+          ">
+            Ver / descargar foto
+          </a>
+        </p>
+        <p>O abre este enlace directamente:</p>
+        <p><a href="${finalImage}" target="_blank">${finalImage}</a></p>
+      </div>
+    `;
 
-          emailSent = true;
-        } catch (emailError) {
-          console.error("Resend error:", emailError);
-        }
-      } else {
-        console.warn("Faltan RESEND_API_KEY o RESEND_FROM");
-      }
-    } else if (safeContact) {
-      const phone = normalizePhone(safeContact);
+    try {
+      console.log("RESEND DEBUG", {
+        from: resendFrom,
+        to: safeContact,
+        subject: "Tu foto del evento está lista",
+      });
 
-      if (phone) {
-        const text = `Hola${
-          participant_name ? ` ${participant_name}` : ""
-        }, aquí está tu foto del evento: ${finalImage}`;
+      const resendResult = await resend.emails.send({
+        from: resendFrom,
+        to: safeContact,
+        subject: "Tu foto del evento está lista",
+        html,
+      });
 
-        whatsappUrl = `https://wa.me/57${phone}?text=${encodeURIComponent(text)}`;
-      }
+      console.log("RESEND RESULT", resendResult);
+      emailSent = true;
+    } catch (emailError) {
+      console.error("Resend error:", emailError);
+    }
+  } else {
+    console.warn("Faltan RESEND_API_KEY o RESEND_FROM");
+  }
+} else if (safeContact) {
+  console.warn("No se enviará email porque contact no es un email válido", {
+    safeContact,
+  });
+
+  const phone = normalizePhone(safeContact);
+
+  if (phone) {
+    const text = `Hola${
+      participant_name ? ` ${participant_name}` : ""
+    }, aquí está tu foto del evento: ${finalImage}`;
+
+    whatsappUrl = `https://wa.me/57${phone}?text=${encodeURIComponent(text)}`;
+  }
+}
     }
 
     return NextResponse.json({
