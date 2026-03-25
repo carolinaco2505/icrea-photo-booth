@@ -9,7 +9,8 @@ export default function EventPage() {
 
   const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
-  const [contact, setContact] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,7 +26,7 @@ export default function EventPage() {
     e.preventDefault();
     setError(null);
 
-    if (!fullName.trim() || !company.trim() || !contact.trim()) {
+    if (!fullName.trim() || !company.trim() || !email.trim() || !phone.trim()) {
       setError("Completa todos los campos para continuar.");
       return;
     }
@@ -44,7 +45,8 @@ export default function EventPage() {
         rid,
         fullName: fullName.trim(),
         company: company.trim(),
-        contact: contact.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
         consent: "true",
       });
 
@@ -83,9 +85,18 @@ export default function EventPage() {
 
           <input
             className="w-full p-3 rounded bg-black/40 border border-white/20"
-            placeholder="Email o WhatsApp"
-            value={contact}
-            onChange={(e) => setContact(e.target.value)}
+            placeholder="Correo electrónico"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <input
+            className="w-full p-3 rounded bg-black/40 border border-white/20"
+            placeholder="Celular / WhatsApp"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
           />
 
           <label className="flex items-start gap-2 text-sm text-white/80">
