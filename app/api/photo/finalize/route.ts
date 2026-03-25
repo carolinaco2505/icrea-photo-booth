@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { supabaseServer } from "@/lib/supabaseServer";
 import { Resend } from "resend";
+import { supabaseUpsert } from "@/lib/supabaseRest";
 
 function sha1(input: string) {
   return crypto.createHash("sha1").update(input).digest("hex");
@@ -81,15 +81,6 @@ export async function POST(req: Request) {
       imageDataUrl,
     } = body ?? {};
 
-    console.log("FINALIZE DEBUG", {
-      event_id,
-      participant_id,
-      participant_name,
-      contact,
-      hasDataUrl: !!dataUrl,
-      hasCloudinaryUrl: !!cloudinary_url,
-    });
-
     if (!event_id) {
       return NextResponse.json(
         { ok: false, error: "Falta event_id" },
@@ -130,39 +121,21 @@ export async function POST(req: Request) {
     const safeContact = (contact || "").trim();
     const contactHash = safeContact ? sha1(safeContact.toLowerCase()) : null;
 
-    const payload = {
-      event_id,
-      participant_id,
-      participant_name: participant_name || null,
-      company: company || null,
-      contact: safeContact || null,
-      contact_hash: contactHash,
-      photo_url: finalImage,
-      cloudinary_public_id: finalPublicId,
-      sent_at: new Date().toISOString(),
-    };
-
-    const { error: dbError } = await supabaseServer
-      .from("photo_deliveries")
-      .upsert(payload, {
-        onConflict: "event_id,participant_id",
-      });
-
-    if (dbError) {
-      console.error("Supabase error:", dbError);
-      return NextResponse.json(
-        { ok: false, error: "Error guardando en base de datos" },
-        { status: 500 }
-      );
-    }
-
-    console.log("CLOUDINARY FOLDER DEBUG", {
-      event_id,
-      company,
-      eventFolder: slugify(event_id),
-      companyFolder: slugify(company || "sin-empresa"),
-      folder: `${slugify(event_id)}/${slugify(company || "sin-empresa")}`,
-    });
+    await supabaseUpsert(
+      "photo_deliveries",
+      {
+        event_id,
+        participant_id,
+        participant_name: participant_name || null,
+        company: company || null,
+        contact: safeContact || null,
+        contact_hash: contactHash,
+        photo_url: finalImage,
+        cloudinary_public_id: finalPublicId,
+        sent_at: new Date().toISOString(),
+      },
+      "event_id,participant_id"
+    );
 
     let emailSent = false;
     let whatsappUrl: string | null = null;
@@ -170,13 +143,6 @@ export async function POST(req: Request) {
     if (safeContact && isEmail(safeContact)) {
       const resendApiKey = process.env.RESEND_API_KEY;
       const resendFrom = process.env.RESEND_FROM;
-
-      console.log("EMAIL CHECK", {
-        safeContact,
-        isEmail: isEmail(safeContact),
-        hasResendApiKey: !!resendApiKey,
-        resendFrom,
-      });
 
       if (resendApiKey && resendFrom) {
         const resend = new Resend(resendApiKey);
@@ -198,26 +164,21 @@ export async function POST(req: Request) {
                 Ver / descargar foto
               </a>
             </p>
-            <p>O abre este enlace directamente:</p>
             <p><a href="${finalImage}" target="_blank">${finalImage}</a></p>
           </div>
         `;
 
         try {
-          const resendResult = await resend.emails.send({
+          await resend.emails.send({
             from: resendFrom,
             to: safeContact,
             subject: "Tu foto del evento está lista",
             html,
           });
-
-          console.log("RESEND RESULT", resendResult);
           emailSent = true;
         } catch (emailError) {
           console.error("Resend error:", emailError);
         }
-      } else {
-        console.warn("Faltan RESEND_API_KEY o RESEND_FROM");
       }
     } else {
       const phone = normalizePhone(safeContact);
