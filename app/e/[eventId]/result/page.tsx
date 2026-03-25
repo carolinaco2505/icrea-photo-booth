@@ -16,6 +16,14 @@ type DeliveryRow = {
   sent_at: string | null;
 };
 
+function normalizePhone(v: string) {
+  return v.replace(/[^\d]/g, "");
+}
+
+function isEmail(v: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+}
+
 export default function ResultPage() {
   const router = useRouter();
   const params = useParams();
@@ -127,19 +135,49 @@ export default function ResultPage() {
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = `icrea-${eventId}-${rid}.png`;
+    a.download = `icrea-${eventId}-${rid}.jpg`;
     document.body.appendChild(a);
     a.click();
     a.remove();
+  };
+
+  const onWhatsApp = () => {
+    const photoUrl = delivery?.photo_url;
+    if (!photoUrl) return;
+
+    const participantName = delivery?.participant_name?.trim() || "";
+    const contact = (delivery?.contact || "").trim();
+
+    const message = `Hola${
+      participantName ? ` ${participantName}` : ""
+    }, aquí está tu foto del evento: ${photoUrl}`;
+
+    let whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+
+    if (contact && !isEmail(contact)) {
+      const phone = normalizePhone(contact);
+
+      if (phone) {
+        const phoneWithCountry = phone.startsWith("57") ? phone : `57${phone}`;
+        whatsappUrl = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(
+          message
+        )}`;
+      }
+    }
+
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <div className="w-full max-w-6xl mx-auto">
         <h1 className="text-2xl font-semibold mb-1">Tu foto está lista</h1>
-        <p className="text-sm text-white/70 mb-4">
+        <p className="text-sm text-white/70 mb-2">
           Evento: <span className="text-white/90">{eventId}</span> · Registro:{" "}
           <span className="text-white/90">{rid || "-"}</span>
+        </p>
+        <p className="text-sm text-white/60 mb-4">
+          Guárdala ahora o envíatela por WhatsApp para no perderla.
         </p>
 
         {error ? (
@@ -156,7 +194,7 @@ export default function ResultPage() {
               <img
                 src={delivery.photo_url}
                 alt="Foto final"
-                className="max-w-full h-auto block"
+                className="max-w-full h-auto block rounded"
                 style={{ maxWidth: "1100px" }}
               />
             </div>
@@ -167,13 +205,29 @@ export default function ResultPage() {
                 Overlay: {overlayPath}
               </div>
               <div className="text-xs text-white/40 mt-1">
-                Tip: si recargas fuerte / abres en otra pestaña, puede perderse el estado del navegador.
+                Tip: si recargas fuerte o abres en otra pestaña, puede perderse el estado del navegador.
               </div>
             </div>
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2 mt-3">
+        <div className="flex flex-wrap gap-2 mt-4">
+          <button
+            onClick={onWhatsApp}
+            disabled={!delivery?.photo_url}
+            className="px-4 py-2 rounded bg-green-600 text-white disabled:opacity-40"
+          >
+            Enviar a mi WhatsApp
+          </button>
+
+          <button
+            onClick={onDownload}
+            disabled={!delivery?.photo_url}
+            className="px-4 py-2 rounded bg-white text-black disabled:opacity-40"
+          >
+            Descargar foto
+          </button>
+
           <button
             onClick={goRepeat}
             className="px-4 py-2 rounded border border-white/30 hover:border-white/60"
@@ -186,14 +240,6 @@ export default function ResultPage() {
             className="px-4 py-2 rounded border border-white/30 hover:border-white/60"
           >
             Cambiar formato
-          </button>
-
-          <button
-            onClick={onDownload}
-            disabled={!delivery?.photo_url}
-            className="px-4 py-2 rounded bg-white text-black disabled:opacity-40"
-          >
-            Descargar
           </button>
         </div>
       </div>
