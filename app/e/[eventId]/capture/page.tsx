@@ -52,7 +52,8 @@ export default function CapturePage() {
   const rid = searchParams.get("rid") || "";
   const fullName = searchParams.get("fullName") || "";
   const company = searchParams.get("company") || "";
-  const contact = searchParams.get("contact") || "";
+  const email = searchParams.get("email") || "";
+  const phone = searchParams.get("phone") || "";
   const consent = searchParams.get("consent") || "false";
   const format = (searchParams.get("format") || "horizontal") as Format;
 
@@ -80,7 +81,7 @@ export default function CapturePage() {
   );
 
   useEffect(() => {
-    if (!rid || !fullName || !company || !contact || consent !== "true") {
+    if (!rid || !fullName || !company || !email || !phone || consent !== "true") {
       setError("Faltan datos del registro. Vuelve a comenzar.");
       return;
     }
@@ -129,7 +130,7 @@ export default function CapturePage() {
         streamRef.current = null;
       }
     };
-  }, [cameraFacing, rid, fullName, company, contact, consent]);
+  }, [cameraFacing, rid, fullName, company, email, phone, consent]);
 
   useEffect(() => {
     const canvas = previewCanvasRef.current;
@@ -212,7 +213,8 @@ export default function CapturePage() {
       rid,
       fullName,
       company,
-      contact,
+      email,
+      phone,
       consent,
     });
 
@@ -247,7 +249,8 @@ export default function CapturePage() {
           event_id: eventId,
           participant_id: rid,
           participant_name: fullName,
-          contact,
+          email,
+          phone,
           company,
           dataUrl: shotDataUrl,
         }),
@@ -270,7 +273,8 @@ export default function CapturePage() {
         format,
         fullName,
         company,
-        contact,
+        email,
+        phone,
         consent,
         photoUrl,
       });
