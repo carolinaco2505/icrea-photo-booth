@@ -9,10 +9,6 @@ function normalizePhone(v: string) {
   return v.replace(/[^\d]/g, "");
 }
 
-function isEmail(v: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
-}
-
 export default function ResultPage() {
   const router = useRouter();
   const params = useParams();
@@ -27,7 +23,8 @@ export default function ResultPage() {
   const format = (searchParams.get("format") || "horizontal") as Format;
   const fullName = searchParams.get("fullName") || "";
   const company = searchParams.get("company") || "";
-  const contact = searchParams.get("contact") || "";
+  const email = searchParams.get("email") || "";
+  const phone = searchParams.get("phone") || "";
   const consent = searchParams.get("consent") || "";
   const photoUrl = searchParams.get("photoUrl") || "";
 
@@ -51,10 +48,12 @@ export default function ResultPage() {
 
     let whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
 
-    if (contact && !isEmail(contact)) {
-      const phone = normalizePhone(contact);
-      if (phone) {
-        const phoneWithCountry = phone.startsWith("57") ? phone : `57${phone}`;
+    if (phone) {
+      const normalized = normalizePhone(phone);
+      if (normalized) {
+        const phoneWithCountry = normalized.startsWith("57")
+          ? normalized
+          : `57${normalized}`;
         whatsappUrl = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(
           message
         )}`;
@@ -69,7 +68,8 @@ export default function ResultPage() {
       rid,
       fullName,
       company,
-      contact,
+      email,
+      phone,
       consent,
       format,
     });
@@ -82,7 +82,8 @@ export default function ResultPage() {
       rid,
       fullName,
       company,
-      contact,
+      email,
+      phone,
       consent,
     });
 
@@ -139,7 +140,7 @@ export default function ResultPage() {
             onClick={goRepeat}
             className="px-4 py-2 rounded border border-white/30 hover:border-white/60"
           >
-            Repetir
+            Tomar otra foto
           </button>
 
           <button
