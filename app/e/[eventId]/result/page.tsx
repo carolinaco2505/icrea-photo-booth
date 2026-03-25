@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { getEventName } from "@/lib/events";
 
 type Format = "horizontal" | "vertical";
 
