@@ -28,16 +28,31 @@ export default function ResultPage() {
   const consent = searchParams.get("consent") || "";
   const photoUrl = searchParams.get("photoUrl") || "";
 
-  const onDownload = () => {
-    if (!photoUrl) return;
+  const onDownload = async () => {
+  if (!photoUrl) return;
+
+  try {
+    const response = await fetch(photoUrl);
+    if (!response.ok) {
+      throw new Error("No se pudo descargar la imagen");
+    }
+
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
 
     const a = document.createElement("a");
-    a.href = photoUrl;
+    a.href = blobUrl;
     a.download = `icrea-${eventId}-${rid}.jpg`;
     document.body.appendChild(a);
     a.click();
     a.remove();
-  };
+
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error("Download error:", error);
+    window.open(photoUrl, "_blank", "noopener,noreferrer");
+  }
+};
 
   const onWhatsApp = () => {
     if (!photoUrl) return;
