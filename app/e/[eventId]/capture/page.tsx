@@ -11,8 +11,13 @@ function drawCover(
   destW: number,
   destH: number
 ) {
-  const sw = (source as HTMLVideoElement).videoWidth || (source as HTMLImageElement).naturalWidth;
-  const sh = (source as HTMLVideoElement).videoHeight || (source as HTMLImageElement).naturalHeight;
+  const sw =
+    (source as HTMLVideoElement).videoWidth ||
+    (source as HTMLImageElement).naturalWidth;
+  const sh =
+    (source as HTMLVideoElement).videoHeight ||
+    (source as HTMLImageElement).naturalHeight;
+
   if (!sw || !sh) return;
 
   const sAspect = sw / sh;
@@ -44,25 +49,16 @@ export default function CapturePage() {
     return Array.isArray(v) ? v[0] : v || "";
   }, [params]);
 
-  const rid = searchParams.get("rid");
-
-if (!rid) {
-  return (
-    <div className="p-10 text-center">
-      <h2 className="text-xl font-bold">Registro inválido</h2>
-      <p>No se encontró un identificador de sesión.</p>
-      <a href={`/e/${eventId}`} className="underline">
-        Volver a registrarse
-      </a>
-    </div>
-  );
-}
-
+  const rid = searchParams.get("rid") || "";
+  const fullName = searchParams.get("fullName") || "";
+  const company = searchParams.get("company") || "";
+  const contact = searchParams.get("contact") || "";
+  const consent = searchParams.get("consent") || "false";
   const format = (searchParams.get("format") || "horizontal") as Format;
 
   const OUT = useMemo(() => {
     if (format === "vertical") return { w: 1080, h: 1920 };
-return { w: 1920, h: 1080 };
+    return { w: 1920, h: 1080 };
   }, [format]);
 
   const overlayPath = useMemo(() => {
@@ -79,9 +75,16 @@ return { w: 1920, h: 1080 };
   const [error, setError] = useState("");
   const [shotDataUrl, setShotDataUrl] = useState("");
   const [saving, setSaving] = useState(false);
-  const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("user");
+  const [cameraFacing, setCameraFacing] = useState<"user" | "environment">(
+    "user"
+  );
 
   useEffect(() => {
+    if (!rid || !fullName || !company || !contact || consent !== "true") {
+      setError("Faltan datos del registro. Vuelve a comenzar.");
+      return;
+    }
+
     let cancelled = false;
 
     async function start() {
@@ -112,7 +115,7 @@ return { w: 1920, h: 1080 };
       } catch (e: any) {
         setError(
           e?.message ||
-            "No pude acceder a la cámara. Revisa permisos del navegador (Camera)."
+            "No pude acceder a la cámara. Revisa permisos del navegador."
         );
       }
     }
@@ -126,7 +129,7 @@ return { w: 1920, h: 1080 };
         streamRef.current = null;
       }
     };
-  }, [cameraFacing]);
+  }, [cameraFacing, rid, fullName, company, contact, consent]);
 
   useEffect(() => {
     const canvas = previewCanvasRef.current;
@@ -205,75 +208,80 @@ return { w: 1920, h: 1080 };
   };
 
   const onChangeFormat = () => {
-    router.push(
-      `/e/${encodeURIComponent(eventId)}/format?rid=${encodeURIComponent(rid)}`
-    );
+    const qs = new URLSearchParams({
+      rid,
+      fullName,
+      company,
+      contact,
+      consent,
+    });
+
+    router.push(`/e/${encodeURIComponent(eventId)}/format?${qs.toString()}`);
   };
 
   const onContinue = async () => {
-  setError("");
+    setError("");
 
-  if (!eventId) {
-    setError("Falta eventId.");
-    return;
-  }
-
-  if (!rid) {
-    setError("Falta rid (registro). Vuelve a empezar desde el formulario.");
-    return;
-  }
-
-  if (!shotDataUrl) {
-    setError("Primero toma la foto.");
-    return;
-  }
-
-  try {
-    setSaving(true);
-
-    const sessionRes = await fetch(`/api/session?rid=${encodeURIComponent(rid)}`, {
-      cache: "no-store",
-    });
-
-    const sessionJson = await sessionRes.json().catch(() => ({}));
-    const session = sessionJson?.session ?? null;
-
-    const participantName = session?.full_name || null;
-const contact = session?.contact || null;
-const company = session?.company || null;
-
-console.log("SESSION DEBUG", session);
-
-    const res = await fetch("/api/photo/finalize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        event_id: eventId,
-        participant_id: rid,
-        participant_name: participantName,
-        contact,
-        company,
-        dataUrl: shotDataUrl,
-      }),
-    });
-
-    const json = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      throw new Error(json?.error || `Finalize failed (${res.status})`);
+    if (!eventId) {
+      setError("Falta eventId.");
+      return;
     }
 
-    router.push(
-      `/e/${encodeURIComponent(eventId)}/result?rid=${encodeURIComponent(
-        rid
-      )}&format=${encodeURIComponent(format)}`
-    );
-  } catch (e: any) {
-    setError(e?.message || "No pude guardar la foto. Revisa el backend.");
-  } finally {
-    setSaving(false);
-  }
-};
+    if (!rid) {
+      setError("Falta rid.");
+      return;
+    }
+
+    if (!shotDataUrl) {
+      setError("Primero toma la foto.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const res = await fetch("/api/photo/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event_id: eventId,
+          participant_id: rid,
+          participant_name: fullName,
+          contact,
+          company,
+          dataUrl: shotDataUrl,
+        }),
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(json?.error || `Finalize failed (${res.status})`);
+      }
+
+      const photoUrl = String(json?.photoUrl || "").trim();
+
+      if (!photoUrl) {
+        throw new Error("No se recibió la URL final de la foto.");
+      }
+
+      const resultQs = new URLSearchParams({
+        rid,
+        format,
+        fullName,
+        company,
+        contact,
+        consent,
+        photoUrl,
+      });
+
+      router.push(`/e/${encodeURIComponent(eventId)}/result?${resultQs.toString()}`);
+    } catch (e: any) {
+      setError(e?.message || "No pude guardar la foto.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
@@ -340,15 +348,19 @@ console.log("SESSION DEBUG", session);
               </button>
             )}
 
-<button
-  onClick={() =>
-    setCameraFacing((prev) => (prev === "user" ? "environment" : "user"))
-  }
-  disabled={saving}
-  className="px-4 py-2 rounded border border-white/30 hover:border-white/60 disabled:opacity-40"
->
-  {cameraFacing === "user" ? "Usar cámara trasera" : "Usar cámara frontal"}
-</button>
+            <button
+              onClick={() =>
+                setCameraFacing((prev) =>
+                  prev === "user" ? "environment" : "user"
+                )
+              }
+              disabled={saving}
+              className="px-4 py-2 rounded border border-white/30 hover:border-white/60 disabled:opacity-40"
+            >
+              {cameraFacing === "user"
+                ? "Usar cámara trasera"
+                : "Usar cámara frontal"}
+            </button>
 
             <button
               onClick={onChangeFormat}
