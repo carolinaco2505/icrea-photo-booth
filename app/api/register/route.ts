@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabaseServer";
+import { supabaseInsert } from "@/lib/supabaseRest";
 
 export async function POST(req: Request) {
   try {
@@ -25,40 +25,25 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("REGISTER INPUT", {
-      eventId,
-      fullName,
+    const rows = await supabaseInsert<{ id: string }[]>("photo_sessions", {
+      event_id: eventId,
+      full_name: fullName,
       company,
       contact,
-      consent,
-      supabaseUrl: (process.env.SUPABASE_URL || "").trim(),
-      hasServiceRoleKey: !!(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim(),
+      consent: true,
+      format: "horizontal",
     });
 
-    const { data, error } = await supabaseServer
-      .from("photo_sessions")
-      .insert({
-        event_id: eventId,
-        full_name: fullName,
-        company,
-        contact,
-        consent: true,
-        format: "horizontal",
-      })
-      .select("id")
-      .single();
+    const rid = rows?.[0]?.id;
 
-    if (error) {
-      console.error("REGISTER SUPABASE ERROR", error);
+    if (!rid) {
       return NextResponse.json(
-        { ok: false, error: error.message || "Error guardando sesión" },
+        { ok: false, error: "No se pudo obtener el id del registro" },
         { status: 500 }
       );
     }
 
-    console.log("REGISTER API RESPONSE", { ok: true, rid: data.id });
-
-    return NextResponse.json({ ok: true, rid: data.id }, { status: 200 });
+    return NextResponse.json({ ok: true, rid }, { status: 200 });
   } catch (e: any) {
     console.error("REGISTER ROUTE ERROR", e);
     return NextResponse.json(
