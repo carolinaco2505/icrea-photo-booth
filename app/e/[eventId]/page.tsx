@@ -2,6 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useState } from "react";
+import { getEventName } from "@/lib/events";
 
 export default function EventPage() {
   const router = useRouter();
