@@ -7,32 +7,51 @@ export default function FormatPage() {
   const searchParams = useSearchParams();
   const { eventId } = useParams<{ eventId: string }>();
 
-  const rid = searchParams.get("rid");
+  const rid = searchParams.get("rid") || "";
+  const fullName = searchParams.get("fullName") || "";
+  const company = searchParams.get("company") || "";
+  const contact = searchParams.get("contact") || "";
+  const consent = searchParams.get("consent") || "";
 
   function go(format: "vertical" | "horizontal") {
-    if (!rid) return;
+    if (!rid || !fullName || !company || !contact || consent !== "true") {
+      alert("Error: faltan datos del registro. Por favor vuelve a iniciar.");
+      router.push(`/e/${encodeURIComponent(eventId)}`);
+      return;
+    }
 
-    if (!rid) {
-  alert("Error: no se encontró el registro. Por favor vuelve a iniciar.");
-  router.push(`/e/${eventId}`);
-  return;
-}
+    const qs = new URLSearchParams({
+      rid,
+      fullName,
+      company,
+      contact,
+      consent,
+      format,
+    });
 
-    router.push(
-  `/e/${encodeURIComponent(eventId)}/capture?rid=${encodeURIComponent(rid || "")}&format=${format}`
-);
+    router.push(`/e/${encodeURIComponent(eventId)}/capture?${qs.toString()}`);
   }
 
-  
+  const goBack = () => {
+    const qs = new URLSearchParams({
+      rid,
+      fullName,
+      company,
+      contact,
+      consent,
+    });
+
+    router.push(`/e/${encodeURIComponent(eventId)}?${qs.toString()}`);
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-black text-white">
       <div className="w-full max-w-md">
         <h1 className="text-3xl font-bold mb-2">Elige el formato</h1>
         <p className="text-sm text-white/70 mb-6">
           Evento: <span className="text-white/90">{eventId}</span>
           <br />
-          Registro: <span className="text-white/90">{rid ?? "-"}</span>
+          Registro: <span className="text-white/90">{rid || "-"}</span>
         </p>
 
         <div className="space-y-3">
@@ -53,7 +72,7 @@ export default function FormatPage() {
           </button>
 
           <button
-            onClick={() => router.push(`/e/${encodeURIComponent(eventId)}`)}
+            onClick={goBack}
             className="w-full border border-white/30 text-white p-3 rounded"
           >
             Volver
