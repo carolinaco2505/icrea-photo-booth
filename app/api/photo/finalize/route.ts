@@ -25,12 +25,18 @@ function slugify(input: string) {
     .toLowerCase();
 }
 
-async function uploadToCloudinary(dataUrl: string, folder: string, publicId: string) {
+async function uploadToCloudinary(
+  dataUrl: string,
+  folder: string,
+  publicId: string
+) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
 
   if (!cloudName || !uploadPreset) {
-    throw new Error("Faltan variables CLOUDINARY_CLOUD_NAME o CLOUDINARY_UPLOAD_PRESET");
+    throw new Error(
+      "Faltan variables CLOUDINARY_CLOUD_NAME o CLOUDINARY_UPLOAD_PRESET"
+    );
   }
 
   const formData = new FormData();
@@ -76,13 +82,13 @@ export async function POST(req: Request) {
     } = body ?? {};
 
     console.log("FINALIZE DEBUG", {
-  event_id,
-  participant_id,
-  participant_name,
-  contact,
-  hasDataUrl: !!dataUrl,
-  hasCloudinaryUrl: !!cloudinary_url,
-});
+      event_id,
+      participant_id,
+      participant_name,
+      contact,
+      hasDataUrl: !!dataUrl,
+      hasCloudinaryUrl: !!cloudinary_url,
+    });
 
     if (!event_id) {
       return NextResponse.json(
@@ -110,14 +116,11 @@ export async function POST(req: Request) {
     let finalImage = incomingImage;
     let finalPublicId: string | null = null;
 
-    // Si viene como dataUrl/base64, la subimos a Cloudinary
     if (incomingImage.startsWith("data:image")) {
-      //const folder = slugify(event_id);
-      //const publicId = `${participant_id}-${Date.now()}`;
       const eventFolder = slugify(event_id);
-const companyFolder = slugify(company || "sin-empresa");
-const folder = `${eventFolder}/${companyFolder}`;
-const publicId = `${participant_id}-${Date.now()}`;
+      const companyFolder = slugify(company || "sin-empresa");
+      const folder = `${eventFolder}/${companyFolder}`;
+      const publicId = `${participant_id}-${Date.now()}`;
 
       const uploaded = await uploadToCloudinary(incomingImage, folder, publicId);
       finalImage = uploaded.secure_url;
@@ -128,16 +131,16 @@ const publicId = `${participant_id}-${Date.now()}`;
     const contactHash = safeContact ? sha1(safeContact.toLowerCase()) : null;
 
     const payload = {
-  event_id,
-  participant_id,
-  participant_name: participant_name || null,
-  company: company || null,
-  contact: safeContact || null,
-  contact_hash: contactHash,
-  photo_url: finalImage,
-  cloudinary_public_id: finalPublicId,
-  sent_at: new Date().toISOString(),
-};
+      event_id,
+      participant_id,
+      participant_name: participant_name || null,
+      company: company || null,
+      contact: safeContact || null,
+      contact_hash: contactHash,
+      photo_url: finalImage,
+      cloudinary_public_id: finalPublicId,
+      sent_at: new Date().toISOString(),
+    };
 
     const { error: dbError } = await supabaseServer
       .from("photo_deliveries")
@@ -153,112 +156,96 @@ const publicId = `${participant_id}-${Date.now()}`;
       );
     }
 
-console.log("CLOUDINARY FOLDER DEBUG", {
-  event_id,
-  company,
-  eventFolder: slugify(event_id),
-  companyFolder: slugify(company || "sin-empresa"),
-  folder: `${slugify(event_id)}/${slugify(company || "sin-empresa")}`,
-});
+    console.log("CLOUDINARY FOLDER DEBUG", {
+      event_id,
+      company,
+      eventFolder: slugify(event_id),
+      companyFolder: slugify(company || "sin-empresa"),
+      folder: `${slugify(event_id)}/${slugify(company || "sin-empresa")}`,
+    });
 
     let emailSent = false;
     let whatsappUrl: string | null = null;
 
-if (safeContact && isEmail(safeContact)) {
-  const resendApiKey = process.env.RESEND_API_KEY;
-  const resendFrom = process.env.RESEND_FROM;
+    if (safeContact && isEmail(safeContact)) {
+      const resendApiKey = process.env.RESEND_API_KEY;
+      const resendFrom = process.env.RESEND_FROM;
 
-  console.log("EMAIL CHECK", {
-    safeContact,
-    isEmail: isEmail(safeContact),
-    hasResendApiKey: !!resendApiKey,
-    resendFrom,
-  });
-
-  if (resendApiKey && resendFrom) {
-    const resend = new Resend(resendApiKey);
-
-    const html = `
-      <div style="font-family: Arial, sans-serif; line-height:1.5;">
-        <h2>Tu foto está lista</h2>
-        <p>Hola${participant_name ? ` ${participant_name}` : ""},</p>
-        <p>Te compartimos tu foto del evento.</p>
-        <p>
-          <a href="${finalImage}" target="_blank" style="
-            display:inline-block;
-            padding:12px 18px;
-            background:#111827;
-            color:#ffffff;
-            text-decoration:none;
-            border-radius:8px;
-          ">
-            Ver / descargar foto
-          </a>
-        </p>
-        <p>O abre este enlace directamente:</p>
-        <p><a href="${finalImage}" target="_blank">${finalImage}</a></p>
-      </div>
-    `;
-
-    try {
-      console.log("RESEND DEBUG", {
-        from: resendFrom,
-        to: safeContact,
-        subject: "Tu foto del evento está lista",
+      console.log("EMAIL CHECK", {
+        safeContact,
+        isEmail: isEmail(safeContact),
+        hasResendApiKey: !!resendApiKey,
+        resendFrom,
       });
 
-      const resendResult = await resend.emails.send({
-        from: resendFrom,
-        to: safeContact,
-        subject: "Tu foto del evento está lista",
-        html,
-      });
+      if (resendApiKey && resendFrom) {
+        const resend = new Resend(resendApiKey);
 
-      console.log("RESEND RESULT", resendResult);
-      emailSent = true;
-    } catch (emailError) {
-      console.error("Resend error:", emailError);
+        const html = `
+          <div style="font-family: Arial, sans-serif; line-height:1.5;">
+            <h2>Tu foto está lista</h2>
+            <p>Hola${participant_name ? ` ${participant_name}` : ""},</p>
+            <p>Te compartimos tu foto del evento.</p>
+            <p>
+              <a href="${finalImage}" target="_blank" style="
+                display:inline-block;
+                padding:12px 18px;
+                background:#111827;
+                color:#ffffff;
+                text-decoration:none;
+                border-radius:8px;
+              ">
+                Ver / descargar foto
+              </a>
+            </p>
+            <p>O abre este enlace directamente:</p>
+            <p><a href="${finalImage}" target="_blank">${finalImage}</a></p>
+          </div>
+        `;
+
+        try {
+          const resendResult = await resend.emails.send({
+            from: resendFrom,
+            to: safeContact,
+            subject: "Tu foto del evento está lista",
+            html,
+          });
+
+          console.log("RESEND RESULT", resendResult);
+          emailSent = true;
+        } catch (emailError) {
+          console.error("Resend error:", emailError);
+        }
+      } else {
+        console.warn("Faltan RESEND_API_KEY o RESEND_FROM");
+      }
+    } else {
+      const phone = normalizePhone(safeContact);
+
+      if (phone) {
+        const phoneWithCountry = phone.startsWith("57") ? phone : `57${phone}`;
+        const text = `Hola${
+          participant_name ? ` ${participant_name}` : ""
+        }, aquí está tu foto del evento: ${finalImage}`;
+
+        whatsappUrl = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(
+          text
+        )}`;
+      }
     }
-  } else {
-    console.warn("Faltan RESEND_API_KEY o RESEND_FROM");
+
+    return NextResponse.json({
+      ok: true,
+      photoUrl: finalImage,
+      cloudinaryPublicId: finalPublicId,
+      emailSent,
+      whatsappUrl,
+    });
+  } catch (error: any) {
+    console.error("Finalize route error:", error);
+    return NextResponse.json(
+      { ok: false, error: error?.message || "Error interno del servidor" },
+      { status: 500 }
+    );
   }
-} else if (safeContact) {
-  console.warn("No se enviará email porque contact no es un email válido", {
-    safeContact,
-  });
-
-  const phone = normalizePhone(safeContact);
-
-  if (phone) {
-    const text = `Hola${
-      participant_name ? ` ${participant_name}` : ""
-    }, aquí está tu foto del evento: ${finalImage}`;
-
-    whatsappUrl = `https://wa.me/57${phone}?text=${encodeURIComponent(text)}`;
-  }
-}
-
-//return NextResponse.json({
-  //ok: true,
-  //photoUrl: finalImage,
-  //cloudinaryPublicId: finalPublicId,
-  //emailSent,
-  //whatsappUrl,
-//});
-
-
-return NextResponse.json({ 
-  ok: true, 
-  photoUrl: finalImage, 
-  cloudinaryPublicId: finalPublicId, 
-  emailSent, whatsappUrl, 
-});
-
-} catch (error: any) { 
-  console.error("Finalize route error:", error); 
-  return NextResponse.json( 
-    { ok: false, error: error?.message || "Error interno del servidor" }, 
-    { status: 500 } 
-  ); 
-} 
 }
