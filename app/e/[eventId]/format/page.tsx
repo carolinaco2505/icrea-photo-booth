@@ -10,11 +10,12 @@ export default function FormatPage() {
   const rid = searchParams.get("rid") || "";
   const fullName = searchParams.get("fullName") || "";
   const company = searchParams.get("company") || "";
-  const contact = searchParams.get("contact") || "";
+  const email = searchParams.get("email") || "";
+  const phone = searchParams.get("phone") || "";
   const consent = searchParams.get("consent") || "";
 
   function go(format: "vertical" | "horizontal") {
-    if (!rid || !fullName || !company || !contact || consent !== "true") {
+    if (!rid || !fullName || !company || !email || !phone || consent !== "true") {
       alert("Error: faltan datos del registro. Por favor vuelve a iniciar.");
       router.push(`/e/${encodeURIComponent(eventId)}`);
       return;
@@ -24,7 +25,8 @@ export default function FormatPage() {
       rid,
       fullName,
       company,
-      contact,
+      email,
+      phone,
       consent,
       format,
     });
@@ -33,15 +35,7 @@ export default function FormatPage() {
   }
 
   const goBack = () => {
-    const qs = new URLSearchParams({
-      rid,
-      fullName,
-      company,
-      contact,
-      consent,
-    });
-
-    router.push(`/e/${encodeURIComponent(eventId)}?${qs.toString()}`);
+    router.push(`/e/${encodeURIComponent(eventId)}`);
   };
 
   return (
