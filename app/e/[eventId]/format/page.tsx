@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, useParams } from "next/navigation";
+import { getEventName } from "@/lib/events";
 
 export default function FormatPage() {
   const router = useRouter();
@@ -43,7 +44,7 @@ export default function FormatPage() {
       <div className="w-full max-w-md">
         <h1 className="text-3xl font-bold mb-2">Elige el formato</h1>
         <p className="text-sm text-white/70 mb-6">
-          Evento: <span className="text-white/90">{eventId}</span>
+          Evento: <span className="text-white/90">{getEventName(eventId)}</span>
           <br />
           Registro: <span className="text-white/90">{rid || "-"}</span>
         </p>
