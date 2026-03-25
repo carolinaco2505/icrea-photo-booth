@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { getEventName } from "@/lib/events";
 
 type Format = "horizontal" | "vertical";
 
@@ -293,7 +294,7 @@ export default function CapturePage() {
         <div className="mb-3">
           <h1 className="text-2xl font-semibold">Toma tu foto</h1>
           <p className="text-sm text-white/70">
-            Evento: <span className="text-white/90">{eventId}</span> · Registro:{" "}
+            Evento: <span className="text-white/90">{getEventName(eventId)}</span> · Registro:{" "}
             <span className="text-white/90">{rid || "-"}</span> · Formato:{" "}
             <span className="text-white/90">{format}</span>
           </p>
