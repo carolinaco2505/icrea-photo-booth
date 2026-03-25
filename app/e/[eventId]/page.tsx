@@ -14,6 +14,13 @@ export default function EventPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  function buildRid() {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      return crypto.randomUUID();
+    }
+    return `rid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -22,55 +29,39 @@ export default function EventPage() {
       setError("Completa todos los campos para continuar.");
       return;
     }
+
     if (!consent) {
       setError("Debes autorizar el uso de tu imagen para continuar.");
       return;
     }
 
     setLoading(true);
+
     try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          eventId,
-          fullName: fullName.trim(),
-          company: company.trim(),
-          contact: contact.trim(),
-          consent: true,
-        }),
+      const rid = buildRid();
+
+      const qs = new URLSearchParams({
+        rid,
+        fullName: fullName.trim(),
+        company: company.trim(),
+        contact: contact.trim(),
+        consent: "true",
       });
 
-      const json = await res.json();
-      console.log("REGISTER RESPONSE FRONT", json);
-      if (!res.ok) {
-        throw new Error(json?.error || "No pude registrar la sesión");
-      }
-
-      
-      const rid = String(json?.rid || "").trim();
-
-if (!rid) {
-  throw new Error("El servidor no devolvió RID");
-}
-
-      console.log("RID FRONT", rid);
-      
-
-      router.push(
-        `/e/${encodeURIComponent(eventId)}/format?rid=${encodeURIComponent(rid)}`
-      );
+      router.push(`/e/${encodeURIComponent(eventId)}/format?${qs.toString()}`);
     } catch (err: any) {
-      setError(err?.message || "Error registrando");
+      setError(err?.message || "No pude continuar");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-black text-white">
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold mb-2">Captura los mejores momentos con ICREA</h1>
+        <h1 className="text-3xl font-bold mb-2">
+          Captura los mejores momentos con ICREA
+        </h1>
         <p className="text-sm text-white/70 mb-6">
           Completa tus datos y autoriza el uso de tu imagen para continuar.
         </p>
@@ -82,15 +73,17 @@ if (!rid) {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
           />
+
           <input
             className="w-full p-3 rounded bg-black/40 border border-white/20"
             placeholder="Empresa"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
           />
+
           <input
             className="w-full p-3 rounded bg-black/40 border border-white/20"
-            placeholder="Email"
+            placeholder="Email o WhatsApp"
             value={contact}
             onChange={(e) => setContact(e.target.value)}
           />
@@ -102,7 +95,8 @@ if (!rid) {
               checked={consent}
               onChange={(e) => setConsent(e.target.checked)}
             />
-            Autorizo el uso de mi imagen para fines promocionales de ICREA, en el marco de este seminario.
+            Autorizo el uso de mi imagen para fines promocionales de ICREA, en el
+            marco de este seminario.
           </label>
 
           {error && (
@@ -115,7 +109,7 @@ if (!rid) {
             disabled={loading}
             className="w-full bg-white text-black p-3 rounded font-medium disabled:opacity-50"
           >
-            {loading ? "Creando registro..." : "Continuar"}
+            {loading ? "Continuando..." : "Continuar"}
           </button>
         </form>
       </div>
