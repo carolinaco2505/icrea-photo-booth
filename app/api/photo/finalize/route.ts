@@ -68,7 +68,8 @@ export async function POST(req: Request) {
       event_id,
       participant_id,
       participant_name,
-      contact,
+      email,
+      phone,
       company,
       cloudinary_url,
       dataUrl,
@@ -112,11 +113,13 @@ export async function POST(req: Request) {
       finalPublicId = uploaded.public_id;
     }
 
-    const safeContact = (contact || "").trim();
+    const safeEmail = (email || "").trim();
+    const safePhone = (phone || "").trim();
+
     let emailSent = false;
     let whatsappUrl: string | null = null;
 
-    if (safeContact && isEmail(safeContact)) {
+    if (safeEmail && isEmail(safeEmail)) {
       const resendApiKey = process.env.RESEND_API_KEY;
       const resendFrom = process.env.RESEND_FROM;
 
@@ -147,7 +150,7 @@ export async function POST(req: Request) {
         try {
           await resend.emails.send({
             from: resendFrom,
-            to: safeContact,
+            to: safeEmail,
             subject: "Tu foto del evento está lista",
             html,
           });
@@ -156,11 +159,14 @@ export async function POST(req: Request) {
           console.error("Resend error:", emailError);
         }
       }
-    } else {
-      const phone = normalizePhone(safeContact);
+    }
 
-      if (phone) {
-        const phoneWithCountry = phone.startsWith("57") ? phone : `57${phone}`;
+    if (safePhone) {
+      const normalized = normalizePhone(safePhone);
+      if (normalized) {
+        const phoneWithCountry = normalized.startsWith("57")
+          ? normalized
+          : `57${normalized}`;
         const text = `Hola${
           participant_name ? ` ${participant_name}` : ""
         }, aquí está tu foto del evento: ${finalImage}`;
