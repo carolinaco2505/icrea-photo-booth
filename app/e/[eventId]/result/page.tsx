@@ -1,20 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 type Format = "horizontal" | "vertical";
-
-type DeliveryRow = {
-  id: string;
-  event_id: string;
-  participant_id: string;
-  participant_name: string | null;
-  contact: string | null;
-  contact_hash: string | null;
-  photo_url: string | null;
-  sent_at: string | null;
-};
 
 function normalizePhone(v: string) {
   return v.replace(/[^\d]/g, "");
@@ -36,105 +25,17 @@ export default function ResultPage() {
 
   const rid = searchParams.get("rid") || "";
   const format = (searchParams.get("format") || "horizontal") as Format;
-
-  const overlayPath = useMemo(() => {
-    return format === "vertical"
-      ? "/overlays/vertical.png"
-      : "/overlays/horizontal.png";
-  }, [format]);
-
-  const [loading, setLoading] = useState(true);
-  const [delivery, setDelivery] = useState<DeliveryRow | null>(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchDeliveryOnce() {
-      const res = await fetch(
-        `/api/photo/result?event_id=${encodeURIComponent(
-          eventId
-        )}&participant_id=${encodeURIComponent(rid)}`,
-        {
-          cache: "no-store",
-        }
-      );
-
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(txt || `No pude leer la foto final (${res.status})`);
-      }
-
-      const json = await res.json().catch(() => ({}));
-      const row: DeliveryRow | null = json?.delivery ?? null;
-      return row;
-    }
-
-    async function loadWithRetry() {
-      try {
-        setError("");
-        setLoading(true);
-
-        if (!eventId) {
-          setError("Falta eventId.");
-          return;
-        }
-
-        if (!rid) {
-          setError("Falta rid (registro). Vuelve a empezar desde el formulario.");
-          return;
-        }
-
-        const maxTries = 15;
-
-        for (let i = 0; i < maxTries; i++) {
-          const row = await fetchDeliveryOnce();
-          if (cancelled) return;
-
-          setDelivery(row);
-
-          if (row?.photo_url) break;
-
-          await new Promise((r) => setTimeout(r, 1000));
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setError(e?.message || "Error cargando la foto final");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadWithRetry();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [eventId, rid]);
-
-  const goRepeat = () => {
-    router.push(
-      `/e/${encodeURIComponent(eventId)}/capture?rid=${encodeURIComponent(
-        rid
-      )}&format=${encodeURIComponent(format)}`
-    );
-  };
-
-  const goChangeFormat = () => {
-    router.push(
-      `/e/${encodeURIComponent(eventId)}/format?rid=${encodeURIComponent(rid)}`
-    );
-  };
+  const fullName = searchParams.get("fullName") || "";
+  const company = searchParams.get("company") || "";
+  const contact = searchParams.get("contact") || "";
+  const consent = searchParams.get("consent") || "";
+  const photoUrl = searchParams.get("photoUrl") || "";
 
   const onDownload = () => {
-    const url = delivery?.photo_url;
-    if (!url) return;
+    if (!photoUrl) return;
 
     const a = document.createElement("a");
-    a.href = url;
+    a.href = photoUrl;
     a.download = `icrea-${eventId}-${rid}.jpg`;
     document.body.appendChild(a);
     a.click();
@@ -142,21 +43,16 @@ export default function ResultPage() {
   };
 
   const onWhatsApp = () => {
-    const photoUrl = delivery?.photo_url;
     if (!photoUrl) return;
 
-    const participantName = delivery?.participant_name?.trim() || "";
-    const contact = (delivery?.contact || "").trim();
-
     const message = `Hola${
-      participantName ? ` ${participantName}` : ""
+      fullName ? ` ${fullName}` : ""
     }, aquí está tu foto del evento: ${photoUrl}`;
 
     let whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
 
     if (contact && !isEmail(contact)) {
       const phone = normalizePhone(contact);
-
       if (phone) {
         const phoneWithCountry = phone.startsWith("57") ? phone : `57${phone}`;
         whatsappUrl = `https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(
@@ -166,6 +62,31 @@ export default function ResultPage() {
     }
 
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const goRepeat = () => {
+    const qs = new URLSearchParams({
+      rid,
+      fullName,
+      company,
+      contact,
+      consent,
+      format,
+    });
+
+    router.push(`/e/${encodeURIComponent(eventId)}/capture?${qs.toString()}`);
+  };
+
+  const goChangeFormat = () => {
+    const qs = new URLSearchParams({
+      rid,
+      fullName,
+      company,
+      contact,
+      consent,
+    });
+
+    router.push(`/e/${encodeURIComponent(eventId)}/format?${qs.toString()}`);
   };
 
   return (
@@ -180,33 +101,19 @@ export default function ResultPage() {
           Guárdala ahora o envíatela por WhatsApp para no perderla.
         </p>
 
-        {error ? (
-          <div className="mb-4 p-3 rounded border border-red-500/40 bg-red-500/10 text-red-200 text-sm">
-            {error}
-          </div>
-        ) : null}
-
         <div className="rounded border border-white/15 bg-black/40 p-3">
-          {loading ? (
-            <div className="text-sm text-white/70">Cargando desde Supabase...</div>
-          ) : delivery?.photo_url ? (
+          {photoUrl ? (
             <div className="flex items-center justify-center">
               <img
-                src={delivery.photo_url}
+                src={photoUrl}
                 alt="Foto final"
                 className="max-w-full h-auto block rounded"
                 style={{ maxWidth: "1100px" }}
               />
             </div>
           ) : (
-            <div className="text-sm text-white/70">
-              No veo la imagen final todavía (photo_url está vacío para este rid).
-              <div className="text-xs text-white/40 mt-2">
-                Overlay: {overlayPath}
-              </div>
-              <div className="text-xs text-white/40 mt-1">
-                Tip: si recargas fuerte o abres en otra pestaña, puede perderse el estado del navegador.
-              </div>
+            <div className="text-sm text-red-300">
+              No se encontró la URL de la foto final. Vuelve a tomarla.
             </div>
           )}
         </div>
@@ -214,7 +121,7 @@ export default function ResultPage() {
         <div className="flex flex-wrap gap-2 mt-4">
           <button
             onClick={onWhatsApp}
-            disabled={!delivery?.photo_url}
+            disabled={!photoUrl}
             className="px-4 py-2 rounded bg-green-600 text-white disabled:opacity-40"
           >
             Enviar a mi WhatsApp
@@ -222,7 +129,7 @@ export default function ResultPage() {
 
           <button
             onClick={onDownload}
-            disabled={!delivery?.photo_url}
+            disabled={!photoUrl}
             className="px-4 py-2 rounded bg-white text-black disabled:opacity-40"
           >
             Descargar foto
