@@ -1,11 +1,5 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 import { Resend } from "resend";
-import { supabaseUpsert } from "@/lib/supabaseRest";
-
-function sha1(input: string) {
-  return crypto.createHash("sha1").update(input).digest("hex");
-}
 
 function isEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
@@ -119,24 +113,6 @@ export async function POST(req: Request) {
     }
 
     const safeContact = (contact || "").trim();
-    const contactHash = safeContact ? sha1(safeContact.toLowerCase()) : null;
-
-    await supabaseUpsert(
-      "photo_deliveries",
-      {
-        event_id,
-        participant_id,
-        participant_name: participant_name || null,
-        company: company || null,
-        contact: safeContact || null,
-        contact_hash: contactHash,
-        photo_url: finalImage,
-        cloudinary_public_id: finalPublicId,
-        sent_at: new Date().toISOString(),
-      },
-      "event_id,participant_id"
-    );
-
     let emailSent = false;
     let whatsappUrl: string | null = null;
 
