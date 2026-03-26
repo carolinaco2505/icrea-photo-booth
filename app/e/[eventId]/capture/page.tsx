@@ -314,7 +314,7 @@ export default function CapturePage() {
                   ref={previewCanvasRef}
                   className="block max-w-full h-auto rounded"
                   style={{
-                    maxHeight: format === "vertical" ? "52vh" : "40vh",
+                    maxHeight: format === "vertical" ? "45vh" : "36vh",
                     width: "auto",
                   }}
                 />
@@ -326,7 +326,7 @@ export default function CapturePage() {
                   alt="Foto final"
                   className="block max-w-full h-auto rounded"
                   style={{
-                    maxHeight: format === "vertical" ? "52vh" : "40vh",
+                    maxHeight: format === "vertical" ? "45vh" : "36vh",
                     width: "auto",
                   }}
                 />
