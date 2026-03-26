@@ -308,28 +308,39 @@ export default function CapturePage() {
 
         <div className="grid gap-4">
           <div className="w-full rounded border border-white/15 bg-black/40 p-3">
-  {!shotDataUrl ? (
-    <div className="flex items-center justify-center">
-      <div className="w-full max-w-[420px] aspect-[9/16] bg-black flex items-center justify-center overflow-hidden rounded">
-        <canvas
-          ref={previewCanvasRef}
-          className="w-full h-full object-contain"
-        />
-      </div>
-    </div>
-  ) : (
-    <div className="flex items-center justify-center">
-      <div className="w-full max-w-[420px] aspect-[9/16] bg-black flex items-center justify-center overflow-hidden rounded">
-        <img
-          src={shotDataUrl}
-          alt="Foto final"
-          className="w-full h-full object-contain"
-        />
-      </div>
-    </div>
-  )}
-</div>
-</div>
+            {!shotDataUrl ? (
+              <div className="flex items-center justify-center">
+                <div
+                  className={`w-full ${
+                    format === "vertical"
+                      ? "max-w-[420px] aspect-[9/16]"
+                      : "max-w-[720px] aspect-[16/9]"
+                  } bg-black flex items-center justify-center overflow-hidden rounded`}
+                >
+                  <canvas
+                    ref={previewCanvasRef}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center">
+                <div
+                  className={`w-full ${
+                    format === "vertical"
+                      ? "max-w-[420px] aspect-[9/16]"
+                      : "max-w-[720px] aspect-[16/9]"
+                  } bg-black flex items-center justify-center overflow-hidden rounded`}
+                >
+                  <img
+                    src={shotDataUrl}
+                    alt="Foto final"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
 
           <video ref={videoRef} playsInline muted className="hidden" />
 
