@@ -307,32 +307,28 @@ export default function CapturePage() {
         ) : null}
 
         <div className="grid gap-4">
-          <div className="w-full rounded border border-white/15 bg-black/40 p-3 overflow-hidden">
+          <div className="w-full rounded border border-white/15 bg-black/40 p-3">
   {!shotDataUrl ? (
     <div className="flex items-center justify-center">
-      <div className="w-full max-w-[960px] h-[70vh] flex items-center justify-center overflow-hidden rounded">
+      <div className="w-full max-w-[420px] aspect-[9/16] bg-black flex items-center justify-center overflow-hidden rounded">
         <canvas
           ref={previewCanvasRef}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-            display: "block",
-          }}
+          className="w-full h-full object-contain"
         />
       </div>
     </div>
   ) : (
     <div className="flex items-center justify-center">
-      <div className="w-full max-w-[960px] h-[60vh] flex items-center justify-center overflow-hidden rounded">
+      <div className="w-full max-w-[420px] aspect-[9/16] bg-black flex items-center justify-center overflow-hidden rounded">
         <img
           src={shotDataUrl}
           alt="Foto final"
-          className="max-w-full max-h-full object-contain block"
+          className="w-full h-full object-contain"
         />
       </div>
     </div>
   )}
+</div>
 </div>
 
           <video ref={videoRef} playsInline muted className="hidden" />
