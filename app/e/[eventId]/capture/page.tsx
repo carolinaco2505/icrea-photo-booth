@@ -65,8 +65,8 @@ export default function CapturePage() {
 
   const overlayPath = useMemo(() => {
     return format === "vertical"
-      ? "/overlays/vertical.png"
-      : "/overlays/horizontal.png";
+      ? `/overlays/${eventId}/vertical.png`
+      : `/overlays/${eventId}/horizontal.png`;
   }, [format]);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
