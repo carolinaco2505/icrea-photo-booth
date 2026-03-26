@@ -118,17 +118,20 @@ export default function ResultPage() {
           Guárdala ahora o envíatela por WhatsApp para no perderla.
         </p>
 
-        <div className="rounded border border-white/15 bg-black/40 p-3">
-          {photoUrl ? (
-            <div className="flex items-center justify-center">
-              <img
-                src={photoUrl}
-                alt="Foto final"
-                className="max-w-full h-auto block rounded"
-                style={{ maxWidth: "1100px" }}
-              />
-            </div>
-          ) : (
+       <div className="rounded border border-white/15 bg-black/40 p-3 overflow-hidden">
+  {photoUrl ? (
+    <div className="flex items-center justify-center">
+      <img
+        src={photoUrl}
+        alt="Foto final"
+        className="block max-w-full h-auto rounded"
+        style={{
+          maxHeight: format === "vertical" ? "40vh" : "32vh",
+          width: "auto",
+        }}
+      />
+    </div>
+  ) : (
             <div className="text-sm text-red-300">
               No se encontró la URL de la foto final. Vuelve a tomarla.
             </div>
