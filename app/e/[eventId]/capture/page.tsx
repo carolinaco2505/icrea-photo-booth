@@ -307,30 +307,33 @@ export default function CapturePage() {
         ) : null}
 
         <div className="grid gap-4">
-          <div className="w-full overflow-auto rounded border border-white/15 bg-black/40 p-3">
-            {!shotDataUrl ? (
-              <div className="flex items-center justify-center">
-                <canvas
-                  ref={previewCanvasRef}
-                  style={{
-                    width: "100%",
-                    maxWidth: "960px",
-                    height: "auto",
-                    display: "block",
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center">
-                <img
-                  src={shotDataUrl}
-                  alt="Foto final"
-                  className="max-w-full h-auto block"
-                  style={{ maxWidth: "960px" }}
-                />
-              </div>
-            )}
-          </div>
+          <div className="w-full rounded border border-white/15 bg-black/40 p-3 overflow-hidden">
+  {!shotDataUrl ? (
+    <div className="flex items-center justify-center">
+      <div className="w-full max-w-[960px] h-[70vh] flex items-center justify-center overflow-hidden rounded">
+        <canvas
+          ref={previewCanvasRef}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            display: "block",
+          }}
+        />
+      </div>
+    </div>
+  ) : (
+    <div className="flex items-center justify-center">
+      <div className="w-full max-w-[960px] h-[60vh] flex items-center justify-center overflow-hidden rounded">
+        <img
+          src={shotDataUrl}
+          alt="Foto final"
+          className="max-w-full max-h-full object-contain block"
+        />
+      </div>
+    </div>
+  )}
+</div>
 
           <video ref={videoRef} playsInline muted className="hidden" />
 
