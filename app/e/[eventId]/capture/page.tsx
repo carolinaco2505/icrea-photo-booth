@@ -306,38 +306,30 @@ export default function CapturePage() {
           </div>
         ) : null}
 
-        <div className="grid gap-4">
-          <div className="w-full rounded border border-white/15 bg-black/40 p-3">
+                <div className="grid gap-4">
+          <div className="w-full rounded border border-white/15 bg-black/40 p-3 overflow-hidden">
             {!shotDataUrl ? (
               <div className="flex items-center justify-center">
-                <div
-                  className={`w-full ${
-                    format === "vertical"
-                      ? "max-w-[420px] aspect-[9/16]"
-                      : "max-w-[720px] aspect-[16/9]"
-                  } bg-black flex items-center justify-center overflow-hidden rounded`}
-                >
-                  <canvas
-                    ref={previewCanvasRef}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
+                <canvas
+                  ref={previewCanvasRef}
+                  className="block max-w-full h-auto rounded"
+                  style={{
+                    maxHeight: format === "vertical" ? "52vh" : "40vh",
+                    width: "auto",
+                  }}
+                />
               </div>
             ) : (
               <div className="flex items-center justify-center">
-                <div
-                  className={`w-full ${
-                    format === "vertical"
-                      ? "max-w-[420px] aspect-[9/16]"
-                      : "max-w-[720px] aspect-[16/9]"
-                  } bg-black flex items-center justify-center overflow-hidden rounded`}
-                >
-                  <img
-                    src={shotDataUrl}
-                    alt="Foto final"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
+                <img
+                  src={shotDataUrl}
+                  alt="Foto final"
+                  className="block max-w-full h-auto rounded"
+                  style={{
+                    maxHeight: format === "vertical" ? "52vh" : "40vh",
+                    width: "auto",
+                  }}
+                />
               </div>
             )}
           </div>
